@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DateTime Display</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            margin: 0 0 30px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .datetime-display {
+            margin: 20px 0;
+        }
+        
+        .current-time {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .current-date {
+            font-size: 1.5em;
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+        
+        .timezone {
+            font-size: 1em;
+            margin: 10px 0;
+            opacity: 0.7;
+        }
+        
+        .controls {
+            margin: 30px 0;
+        }
+        
+        select {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        select:hover {
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .format-options {
+            margin: 20px 0;
+        }
+        
+        label {
+            display: inline-block;
+            margin: 0 15px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+        
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8em;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DateTime Display</h1>
+        
+        <div class="datetime-display">
+            <div class="current-time" id="timeDisplay">--:--:--</div>
+            <div class="current-date" id="dateDisplay">Loading...</div>
+            <div class="timezone" id="timezoneDisplay">--</div>
+        </div>
+        
+        <div class="controls">
+            <label for="timezoneSelect">Timezone:</label>
+            <select id="timezoneSelect">
+                <option value="local">Local Time</option>
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">New York</option>
+                <option value="America/Los_Angeles">Los Angeles</option>
+                <option value="Europe/London">London</option>
+                <option value="Europe/Paris">Paris</option>
+                <option value="Asia/Tokyo">Tokyo</option>
+                <option value="Asia/Shanghai">Shanghai</option>
+                <option value="Australia/Sydney">Sydney</option>
+            </select>
+        </div>
+        
+        <div class="format-options">
+            <label>
+                <input type="radio" name="timeFormat" value="12" checked>
+                12-hour format
+            </label>
+            <label>
+                <input type="radio" name="timeFormat" value="24">
+                24-hour format
+            </label>
+        </div>
+    </div>
+    
+    <div class="version">v1.0.0</div>
+    
+    <script>
+        let currentTimezone = 'local';
+        let timeFormat = '12';
+        let updateInterval;
+        
+        function updateDateTime() {
+            const now = new Date();
+            const timeDisplay = document.getElementById('timeDisplay');
+            const dateDisplay = document.getElementById('dateDisplay');
+            const timezoneDisplay = document.getElementById('timezoneDisplay');
+            
+            // Configure timezone
+            let options = {
+                timeZone: currentTimezone === 'local' ? undefined : currentTimezone,
+                hour12: timeFormat === '12'
+            };
+            
+            // Time formatting
+            const timeOptions = {
+                ...options,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            
+            // Date formatting
+            const dateOptions = {
+                ...options,
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            
+            try {
+                timeDisplay.textContent = now.toLocaleTimeString('en-US', timeOptions);
+                dateDisplay.textContent = now.toLocaleDateString('en-US', dateOptions);
+                
+                // Display timezone info
+                if (currentTimezone === 'local') {
+                    timezoneDisplay.textContent = 'Local Time';
+                } else {
+                    timezoneDisplay.textContent = currentTimezone;
+                }
+            } catch (error) {
+                console.error('Error formatting date/time:', error);
+                timeDisplay.textContent = 'Error';
+                dateDisplay.textContent = 'Error formatting date/time';
+            }
+        }
+        
+        function startClock() {
+            updateDateTime();
+            updateInterval = setInterval(updateDateTime, 1000);
+        }
+        
+        function stopClock() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('timezoneSelect').addEventListener('change', function(e) {
+            currentTimezone = e.target.value;
+            stopClock();
+            startClock();
+        });
+        
+        document.querySelectorAll('input[name="timeFormat"]').forEach(radio => {
+            radio.addEventListener('change', function(e) {
+                timeFormat = e.target.value;
+                stopClock();
+                startClock();
+            });
+        });
+        
+        // Initialize
+        startClock();
+        
+        // Handle page visibility change to keep clock accurate
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopClock();
+            } else {
+                startClock();
+            }
+        });
+    </script>
+</body>
+</html>
